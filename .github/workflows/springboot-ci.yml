@@ -1,0 +1,36 @@
+name: Springboot Petclinic CI Workflow 
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+
+jobs:
+  
+  ci-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.7
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4.3.0
+        with:
+          java-version: 11
+          distribution: 'adopt'
+          cache: maven
+
+      - run: ./mvnw -B package
+
+      - name: docker login
+        uses: docker/login-action@v3.3.0
+        with:
+          username: ${{ vars.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          
+      - name: Docker Build and Push
+        run: |
+          docker build -t weebad/demo-petclinic:${{ github.run_number }} .
+          docker push weebad/demo-petclinic:${{ github.run_number }}
